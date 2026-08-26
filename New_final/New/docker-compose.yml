@@ -1,0 +1,191 @@
+# =============================================================================
+# Arazzo Workflow Platform - Docker Compose
+# Simplified setup: 2 main application containers + infrastructure
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # INFRASTRUCTURE SERVICES
+  # ===========================================================================
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: arazzo-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arazzo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arazzo_password}
+      POSTGRES_DB: ${POSTGRES_DB:-arazzo_platform}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - arazzo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arazzo_user} -d ${POSTGRES_DB:-arazzo_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: arazzo-qdrant
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - arazzo-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  phi-llm:
+    image: ollama/ollama:latest
+    container_name: arazzo-phi-llm
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    volumes:
+      - phi-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - arazzo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: arazzo-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - arazzo-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # APPLICATION CONTAINERS (2 Main Containers)
+  # ===========================================================================
+
+  # Container 1: Backend API (.NET 8) - All backend functionality in one container
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: arazzo-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-arazzo_platform};Username=${POSTGRES_USER:-arazzo_user};Password=${POSTGRES_PASSWORD:-arazzo_password}"
+      Phi__Endpoint: http://phi-llm:11434
+      Phi__ModelName: ${PHI_MODEL_NAME:-phi3:latest}
+      Ollama__Endpoint: http://phi-llm:11434
+      Ollama__EmbeddingModel: nomic-embed-text
+      Ollama__VectorDimension: "768"
+      Qdrant__Endpoint: http://qdrant:6333
+      Qdrant__CollectionName: openapi_embeddings
+      Qdrant__VectorSize: "768"
+      Jaeger__Endpoint: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: arazzo-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      phi-llm:
+        condition: service_healthy
+    networks:
+      - arazzo-network
+    volumes:
+      - uploads:/app/uploads
+      - backend-logs:/app/logs
+      - backend-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    restart: unless-stopped
+
+  # Container 2: Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000}
+    container_name: arazzo-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - arazzo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  arazzo-network:
+    driver: bridge
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  postgres-data:
+  qdrant-data:
+  phi-models:
+  uploads:
+  backend-logs:
+  backend-data:

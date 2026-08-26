@@ -1,0 +1,248 @@
+.monitor-page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.workflow-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+.workflow-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.workflow-item h3 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workflow-item h3::before {
+  content: "⚡";
+}
+
+.workflow-id {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-darker);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.workflow-description {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.workflow-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.timestamp {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.workflow-meta {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.workflow-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg-darker);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+}
+
+.info-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.error-card {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.error-card p {
+  color: #f87171;
+}
+
+/* Steps List */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--bg-darker);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+  transition: var(--transition);
+}
+
+.step-item:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.375rem;
+}
+
+.step-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Workflow Section */
+.workflow-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.workflow-section h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workflow-section-description {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* Loading State */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.loading-spinner::after {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Actions */
+.workflow-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.workflow-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}

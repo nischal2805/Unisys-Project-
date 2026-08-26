@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\New",
+    "\\New\\src",
+    "\\New\\src\\backend",
+    "\\New\\src\\backend\\src",
+    "\\New\\src\\backend\\src\\Application",
+    "\\New\\src\\backend\\src\\Application\\Workflows",
+    "\\New\\src\\backend\\src\\Application\\Workflows\\Commands"
+  ],
+  "SelectedNode": "\\New\\src\\backend\\src\\Application\\Workflows\\Commands\\CreateWorkflowCommandHandler.cs",
+  "PreviewInSolutionExplorer": false
+}
